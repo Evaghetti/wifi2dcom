@@ -73,6 +73,7 @@ pub fn get_dcom_output(serial_port: &str, digirom: &str) -> Result<String> {
         }
 
         send_command(&mut port, "Random stuff")?;
+        let _ = receive_response(&mut port)?;
         // Read data
         return Ok(received_line);
     }
