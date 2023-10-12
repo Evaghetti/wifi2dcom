@@ -857,6 +857,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-this-or-that"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "634c5a3cb041e56cc2964386151c67d520f845445789da3bd46bfb1c94f5e3bb"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.188"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1109,6 +1118,7 @@ dependencies = [
  "futures",
  "paho-mqtt",
  "serde",
+ "serde-this-or-that",
  "serde_json",
  "serialport",
 ]

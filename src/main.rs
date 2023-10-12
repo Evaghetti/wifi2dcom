@@ -8,6 +8,7 @@ use futures::{executor::block_on, stream::StreamExt};
 use mqtt::Message;
 use paho_mqtt as mqtt;
 use serde::{Deserialize, Serialize};
+use serde_this_or_that::as_u64;
 use std::time::Duration;
 
 use crate::arduino::get_dcom_output;
@@ -17,10 +18,11 @@ const WIFICOM_URL: &'static str = "mqtt://mqtt.wificom.dev:1883";
 #[derive(Serialize, Deserialize)]
 struct BattleRequest {
     digirom: String,
+    #[serde(deserialize_with = "as_u64")]
     application_id: u64,
     hide_output: bool,
     api_response: bool,
-    ack_id: String,
+    ack_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -28,7 +30,7 @@ struct BattleResponse {
     application_uuid: u64,
     device_uuid: String,
     output: String,
-    ack_id: String,
+    ack_id: Option<String>,
 }
 
 fn main() -> Result<()> {
@@ -83,7 +85,7 @@ fn main() -> Result<()> {
                     application_uuid: battle_request.application_id,
                     device_uuid: config.device_uuid.clone(),
                     output: get_dcom_output(&args.serial_port, &battle_request.digirom)?,
-                    ack_id: battle_request.ack_id,
+                    ack_id: battle_request.ack_id.or(Some("".to_string())),
                 };
 
                 let msg = Message::new(
@@ -92,7 +94,7 @@ fn main() -> Result<()> {
                     mqtt::QOS_0,
                 );
 
-                println!("{:?}", msg);
+                println!("Sent {}", msg);
                 cli.publish(msg).await?;
             } else {
                 // A "None" means we were disconnected. Try to reconnect...
