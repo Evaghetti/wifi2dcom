@@ -1,7 +1,11 @@
-mod arduino;
+use clap::Parser;
+use cli::Wifi2DCom;
 
-use arduino::get_dcom_output;
+mod arduino;
+mod cli;
 
 fn main() {
-    get_dcom_output("/dev/ttyUSB0", "V1-FC03-FD02").expect("Failed to send and read");
+    let args = Wifi2DCom::parse();
+    let config = args.get_config().expect("Not able to configure app");
+    println!("{:?}", config);
 }
