@@ -50,7 +50,7 @@ pub fn get_dcom_output(serial_port: &str, digirom: &str) -> Result<String> {
         .timeout(std::time::Duration::from_millis(1000))
         .flow_control(serialport::FlowControl::Hardware)
         .open()
-        .expect("Failed to open port");
+        .with_context(|| format!("Not possible to open port {}", serial_port))?;
 
     thread::sleep(Duration::from_secs(5));
 

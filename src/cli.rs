@@ -8,19 +8,19 @@ use serde::Deserialize;
 pub struct InlineWificomConfig {
     /// 'username' config given by the secrets.py
     #[arg(short, long)]
-    username: String,
+    pub username: String,
 
     /// 'password' config given by the secrets.py
     #[arg(short, long)]
-    password: String,
+    pub password: String,
 
     /// 'user_uuid' config given by the secrets.py
     #[arg(short = 'i', long)]
-    user_uuid: String,
+    pub user_uuid: String,
 
     /// 'device_uuid' config given by the secrets.py
     #[arg(short, long)]
-    device_uuid: String,
+    pub device_uuid: String,
 }
 
 #[derive(Parser)]
@@ -28,7 +28,7 @@ pub struct InlineWificomConfig {
 pub struct Wifi2DCom {
     /// Which serial port your D-COM is connected
     #[arg(short, long)]
-    serial_port: String,
+    pub serial_port: String,
 
     /// JSON file with configs given by wificom.dev
     #[arg(
