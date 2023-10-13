@@ -66,7 +66,7 @@ pub fn get_dcom_output(serial_port: &str, digirom: &str) -> Result<String> {
         println!("Received {}", received_line);
         if received_line.len() == 0
             || received_line.starts_with("got")
-            || received_line.ends_with(" t")
+            || received_line.ends_with("t")
         {
             println!("Skipping");
             continue;

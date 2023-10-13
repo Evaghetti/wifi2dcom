@@ -2,6 +2,7 @@ mod arduino;
 mod cli;
 
 use anyhow::{Context, Result};
+use async_std::sync::Mutex;
 use clap::Parser;
 use cli::Wifi2DCom;
 use futures::{executor::block_on, stream::StreamExt};
@@ -9,7 +10,7 @@ use mqtt::Message;
 use paho_mqtt as mqtt;
 use serde::{Deserialize, Serialize};
 use serde_this_or_that::as_u64;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use crate::arduino::get_dcom_output;
 
@@ -30,7 +31,7 @@ struct BattleResponse {
     application_uuid: u64,
     device_uuid: String,
     output: String,
-    ack_id: Option<String>,
+    ack_id: String,
 }
 
 fn main() -> Result<()> {
@@ -74,6 +75,40 @@ fn main() -> Result<()> {
 
         cli.subscribe(input_topic, 0).await?;
 
+        let heartbeat_cli = Arc::new(Mutex::new(()));
+        let cli_clone = cli.clone();
+        let output_topic_clone = output_topic.clone();
+        let heartbeat_cli_clone = Arc::new(Mutex::new(()));
+        let device_uuid_clone = config.device_uuid.clone();
+        async_std::task::spawn(async move {
+            loop {
+                let _lock = heartbeat_cli_clone.lock();
+
+                let battle_response = BattleResponse {
+                    application_uuid: 0,
+                    device_uuid: device_uuid_clone.clone(),
+                    output: "None".to_string(),
+                    ack_id: "heartbeat".to_string(),
+                };
+
+                let msg = Message::new(
+                    &output_topic_clone,
+                    serde_json::to_string(&battle_response)
+                        .expect("Not possible to create payload of heartbeat")
+                        .as_bytes(),
+                    mqtt::QOS_0,
+                );
+                println!("Sending {} as heartbeat", msg);
+                cli_clone
+                    .publish(msg)
+                    .await
+                    .expect("Not able to send heartbeat");
+
+                std::mem::drop(_lock);
+                async_std::task::sleep(Duration::from_secs(20)).await;
+            }
+        });
+
         // Just loop on incoming messages.
         println!("Waiting for messages...");
 
@@ -85,7 +120,7 @@ fn main() -> Result<()> {
                     application_uuid: battle_request.application_id,
                     device_uuid: config.device_uuid.clone(),
                     output: get_dcom_output(&args.serial_port, &battle_request.digirom)?,
-                    ack_id: battle_request.ack_id.or(Some("".to_string())),
+                    ack_id: battle_request.ack_id.unwrap_or("".to_string()),
                 };
 
                 let msg = Message::new(
@@ -95,6 +130,8 @@ fn main() -> Result<()> {
                 );
 
                 println!("Sent {}", msg);
+
+                let _lock = heartbeat_cli.lock();
                 cli.publish(msg).await?;
             } else {
                 // A "None" means we were disconnected. Try to reconnect...
