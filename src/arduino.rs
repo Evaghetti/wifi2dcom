@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use serialport::SerialPort;
 use std::{thread, time::Duration};
 
@@ -76,5 +76,21 @@ pub fn get_dcom_output(serial_port: &str, digirom: &str) -> Result<String> {
         let _ = receive_response(&mut port)?;
         // Read data
         return Ok(received_line);
+    }
+}
+
+pub fn is_valid_serial_port(port_check: &str) -> Result<String> {
+    let port_check_str = port_check.to_string();
+    let is_valid = serialport::available_ports()
+        .with_context(|| "Not able to get available ports")?
+        .iter()
+        .map(|p| p.port_name.clone())
+        .collect::<Vec<String>>()
+        .contains(&port_check_str);
+
+    if is_valid {
+        Ok(port_check_str)
+    } else {
+        Err(anyhow!("The port {} is not valid", port_check))
     }
 }

@@ -1,3 +1,4 @@
+use crate::arduino::is_valid_serial_port;
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
 use clio::Input;
@@ -27,7 +28,7 @@ pub struct InlineWificomConfig {
 #[command(name = "wifi2dcom", about = "Use your D-COM as if it was a wificom!")]
 pub struct Wifi2DCom {
     /// Which serial port your D-COM is connected
-    #[arg(short, long)]
+    #[arg(short, long, value_parser = is_valid_serial_port)]
     pub serial_port: String,
 
     /// JSON file with configs given by wificom.dev
