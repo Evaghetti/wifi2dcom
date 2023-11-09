@@ -114,6 +114,8 @@ fn main() -> Result<()> {
 
         while let Some(msg_opt) = strm.next().await {
             if let Some(msg) = msg_opt {
+                let _lock = heartbeat_cli.lock();
+
                 println!("Received {}", msg);
                 let battle_request: BattleRequest = serde_json::from_str(&msg.payload_str())?;
                 let battle_response = BattleResponse {
@@ -131,7 +133,6 @@ fn main() -> Result<()> {
 
                 println!("Sent {}", msg);
 
-                let _lock = heartbeat_cli.lock();
                 cli.publish(msg).await?;
             } else {
                 // A "None" means we were disconnected. Try to reconnect...
